@@ -1,16 +1,12 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/alejontnu/am-robot?label=Number%20of%20button%20mashers&style=plastic)
 
 # am-robot
-Package for using a Franka Emika Panda robot maniplator for additive manufacturing. Done as part of two student projects:
-| Project               | Commits     |
-|-----------------------|-------------|
-|Specialization project | 1 - 64      |
-|Master's project       | 65 - latest |
-
+Package for using a Franka Emika Panda robot maniplator together with an extruder for additive manufacturing. 
+Continuation of Alexander Waller Johnsgaard master's thesis. Forked from: https://github.com/alejontnu/am-robot
+Andreas Moltumyr developed the control of the extruder: https://github.com/mltmyr/extruderCtrl/tree/main
 
 ## About the package
-The am-robot package aims to enable additive manufacturing on a robot manipulator. The overall goal is to make it general enough that different tools can be used with different robots. A G-code file is used as input and after some pro-processing of the file, motion trajectories for the robot is generated. An FDM extruder have been used when testing, controlled by an Arduino Mega2560 over a serial connection.
-
+The AM-robot package aims to enable additive manufacturing on a robot manipulator.  A G-code file is used as input and after some pro-processing of the file, motion trajectories for the robot is generated. An FDM extruder have been used when testing, controlled by an Arduino Mega2560 over a serial connection. 
 
 ## Feature summary
 Features are under development and spesifics can change as the project continues...
@@ -22,28 +18,33 @@ Features are under development and spesifics can change as the project continues
 - Non-realtime syncronization of tool to robot
 
 ## Getting started
-```
-pip install git+https://github.com/alejontnu/am-robot.git@main
-pip install -r test_requirements.txt
-pip install -e .
-pytest
-```
-This package is built using Python 3, specifically tested on Python 3.8
+A Docker file is made to build a Docker container which sets up an environment with the necessary dependencies for working with the Panda robot and the AM_robot project.
+The Docker file and Docker commands can be found here:  https://github.com/theacharlotte/AM_robot_docker
+
+The Docker file includes installation of libfranka v0.9.2 and frankx v0.2.0 for communication with Franka Emika Panda robot, and the dependencies for libfranka, frankx and AM_robot.
+Python 3.10 is installed as well as usefull packages such as git and GCC.
+
+To use this container, ensure Docker is installed on your system and build the image by looking at the commands in the init.md file. Once built, you can run the container to get environment needed to run the functions in this (AM-robot) project.
 
 ### Dependencies
+This project is dependent on:
 - plotly: For visualizion of trajectories and bed level mesh
 - argparse: For parsing input arguments
 - gcodeparser: For initial parsing of G-code into Dictionary object containing G-code lines and more
 - numpy:
 - pandas:
+- matplotlib:
+- mgen:
+- serialstruct: VET IKKE HVOR AKKURATT NÅ
 
 Franka Emika Panda robot is dependent on:
-- libfranka v0.7.1: C++ library for controlling Franka Emika Panda robot. Build from source (https://frankaemika.github.io/docs/)
-- frankx v0.1.1: Python wrapper around libfranka. Build from source (https://github.com/pantor/frankx) to include dependencies, Ruckig and Eigen
+- libfranka: C++ library for controlling Franka Emika Panda robot. 
+- frankx: Python wrapper around libfranka. 
 
 Arduino FDM extruder controller is dependent on:
 - pyserial: For communication with the Arduino
 - struct: To pack and unpack format used for serial communication
+
 
 ### Quick guide
 **Arguments taken**
@@ -66,7 +67,7 @@ M104 S200 ; set temperature
 This is so that homing and bed probing can be done before nozzle is heated up.
 
 
-## Current status
+## Current status TO BE DELETED LATER
 Preliminary result show need for better control of the extrusion process. As can be seen in the test print below, motion trajectories are aborted if the robot encounters an error (such as acceleration contraint violation) and the remainder of the motion trajectory is left incomplete.
 
 ![First Benchy](https://github.com/alejontnu/am-robot/blob/main/images/blackprofile.png?raw=true)
