@@ -35,7 +35,6 @@ This project is dependent on:
 - pandas:
 - matplotlib:
 - mgen:
-- serialstruct: VET IKKE HVOR AKKURATT NÅ
 
 Franka Emika Panda robot is dependent on:
 - libfranka: C++ library for controlling Franka Emika Panda robot. 
