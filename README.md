@@ -2,7 +2,9 @@
 
 # am-robot
 Package for using a Franka Emika Panda robot maniplator together with an extruder for additive manufacturing. 
+
 This is a continuation of Alexander Waller Johnsgaard master's thesis. Forked from: https://github.com/alejontnu/am-robot
+
 Andreas Moltumyr developed the control of the extruder: https://github.com/mltmyr/extruderCtrl/tree/main
 
 ## About the package
