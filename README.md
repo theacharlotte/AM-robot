@@ -31,10 +31,10 @@ This project is dependent on:
 - plotly: For visualizion of trajectories and bed level mesh
 - argparse: For parsing input arguments
 - gcodeparser: For initial parsing of G-code into Dictionary object containing G-code lines and more
-- numpy:
-- pandas:
-- matplotlib:
-- mgen:
+- numpy
+- pandas
+- matplotlib
+- mgen
 
 Franka Emika Panda robot is dependent on:
 - libfranka: C++ library for controlling Franka Emika Panda robot. 
