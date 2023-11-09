@@ -2,7 +2,7 @@
 
 # am-robot
 Package for using a Franka Emika Panda robot maniplator together with an extruder for additive manufacturing. 
-Continuation of Alexander Waller Johnsgaard master's thesis. Forked from: https://github.com/alejontnu/am-robot
+This is a continuation of Alexander Waller Johnsgaard master's thesis. Forked from: https://github.com/alejontnu/am-robot
 Andreas Moltumyr developed the control of the extruder: https://github.com/mltmyr/extruderCtrl/tree/main
 
 ## About the package
@@ -18,7 +18,7 @@ Features are under development and spesifics can change as the project continues
 - Non-realtime syncronization of tool to robot
 
 ## Getting started
-A Docker file is made to build a Docker container which sets up an environment with the necessary dependencies for working with the Panda robot and the AM_robot project.
+A Docker file is made to build a Docker container which sets up an environment with the necessary dependencies for working with the Panda robot and the AM-robot project.
 The Docker file and Docker commands can be found here:  https://github.com/theacharlotte/AM_robot_docker
 
 The Docker file includes installation of libfranka v0.9.2 and frankx v0.2.0 for communication with Franka Emika Panda robot, and the dependencies for libfranka, frankx and AM_robot.
