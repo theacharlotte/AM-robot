@@ -434,7 +434,7 @@ class GCodeExecutor(GCodeCommands):
         cwd = os.getcwd()
 
         for root, dirs, files in os.walk(cwd):
-            if filename+extension in files:
+            if filename+extension in files:  
                 fullpath = os.path.join(root, filename+extension)
 
         # Read file
@@ -476,6 +476,7 @@ class GCodeExecutor(GCodeCommands):
 
         '''
         if homing_type == 'Guiding':
+            print("HallaballaS")
             self.robot.robot_init_move()
 
             print("INFO: To enter guiding mode, EMERGENCY STOP button needs to be pressed DOWN and the robot light should be continuously WHITE!")
