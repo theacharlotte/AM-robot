@@ -12,20 +12,33 @@ from _movex import Path, TimeParametrization, Trajectory
 
 
 
-def move_robot_line(self):
+def move_robot_line(self, feedrate):
+    # Relative motion
     next_translation = Affine(10.0, 0.0, 0.0)
-    motion_line = self.LinearRelativeMotion(next_translation)
+    motion_line = self.make_linear_relative_motion(next_translation)
+    self.move(motion_line)
+
+    self.set_feedrate(0.0)
+    next_translation = Affine(-10.0, -3.0, 0.0)
+    motion_line = self.make_linear_relative_motion(next_translation)
+    self.move(motion_line)
+
+    # Absolute motion
+    self.set_feedrate(feedrate)
+    start_pose = self.read_current_pose()
+    next_pose = start_pose + Affine(10.0, 0.0, 0.0)
+    motion_line = self.make_linear_motion(next_pose)
     self.move(motion_line)
 
 def move_robot_square(self):
     translations = [Affine(10.0, 0.0, 0.0), Affine(0.0, 10.0, 0.0), Affine(-10.0, 0.0, 0.0), Affine(0.0, -10.0, 0.0)]
     for i in range(len(translations)):
-        motion_line = self.LinearRelativeMotion(translations(i))
+        motion_line = self.make_linear_relative_motion(translations(i))
         self.move(motion_line)
 
 def move_robot_angle(self, angle_deg):
     next_translation = Affine(10.0, 0.0, 0.0)
-    motion_line = self.LinearRelativeMotion(next_translation)
+    motion_line = self.make_linear_relative_motion(next_translation)
     self.move(motion_line)
 
     # Calculate the x and y position for the new waypoint based on the angle
@@ -34,7 +47,7 @@ def move_robot_angle(self, angle_deg):
     new_y = 10 * np.sin(angle_rad)
 
     next_translation = Affine(new_x, new_y, 0.0) 
-    motion_line = self.LinearRelativeMotion(next_translation)
+    motion_line = self.make_linear_relative_motion(next_translation)
     self.move(motion_line)
 
 def thread_varying_feedrate(self, extruder_vel):
@@ -45,12 +58,12 @@ def thread_varying_feedrate(self, extruder_vel):
         self.set_feedrate(extruder_vel) 
     
 
-def move_robot_line_variable_feedrate(self, extruder_vel):
+def move_robot_line_variable_feedrate(self, feedrate):
 
-    thread_extruder = threading.Thread(target=thread_varying_feedrate(self, extruder_vel))
+    thread_extruder = threading.Thread(target=thread_varying_feedrate(self, feedrate))
 
     next_translation = Affine(10.0, 0.0, 0.0)
-    motion_line = self.LinearRelativeMotion(next_translation)
+    motion_line = self.make_linear_relative_motion(next_translation)
 
     thread_extruder.start()
 
@@ -83,7 +96,7 @@ def research_experiments(movement_fcn):
 
 
     temp = 200
-    extruder_vel = 300 # Maybe change to 1800 ####################################
+    feedrate = 300 # Maybe change to 1800 ####################################
 
     # Set velocity, acceleration and jerk to 5% of the maximum
     robot.set_dynamic_rel(0.05)
@@ -100,7 +113,7 @@ def research_experiments(movement_fcn):
         pass
         
     # Start extruder
-    tool.set_feedrate(extruder_vel) 
+    tool.set_feedrate(feedrate) 
     input("Enter when continously material deposition")
     tool.set_feedrate(0) 
 
@@ -110,10 +123,10 @@ def research_experiments(movement_fcn):
     input("Position end-effector nozzle 0.5 cm from desired (0,0) location.\nWhen satisfied with position, press Enter to continue...")
      
     # Start extruder and move ten cm    #### THESE TWO LINES ARE THE ONLY LINES THAT NEEDS TO BE CHANGED FOR VARYING EXTRUSION SPEED
-    tool.set_feedrate(extruder_vel) 
+    tool.set_feedrate(feedrate) 
     movement_fcn
     #next_pose = Affine(10.0, 0.0, 0.0)
-    #motion_forward = robot.LinearRelativeMotion(next_pose)
+    #motion_forward = robot.make_linear_relative_motion(next_pose)
     #robot.move(motion_forward)
 
     # Stop extruder
