@@ -476,7 +476,6 @@ class GCodeExecutor(GCodeCommands):
 
         '''
         if homing_type == 'Guiding':
-            print("HallaballaS")
             self.robot.robot_init_move()
 
             print("INFO: To enter guiding mode, EMERGENCY STOP button needs to be pressed DOWN and the robot light should be continuously WHITE!")
