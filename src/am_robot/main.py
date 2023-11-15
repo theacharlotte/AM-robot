@@ -18,6 +18,7 @@ import am_robot.ResearchExperiments as re
 #         print('Running on OS: ' + sys.platform)
 
 
+
 def main():
     '''
     Additive manufactureing package for the Franka Emika Panda robot manipulator.
@@ -29,6 +30,7 @@ def main():
     tool: string
         serial string used for tool connection (default: /dev/ttyUSB0)
     gfile: string
+
         string name of gcode file used for additive manufacturing, with or without .gcode ending (default: Circle.gcode)
     visualize: bool, optional
         flag for enabling visualization for gcode (default: False)
@@ -161,12 +163,9 @@ def main_read_temp():
 if __name__ == '__main__':
     #main()
     #main_read_temp()
-    re.research_experiments(re.move_robot_line())
-    #re.research_experiments(re.move_robot_square())
-    #angle_deg = 10
-    #re.research_experiments(re.move_robot_angle(angle_deg))
-    #extruder_vel = 300
-    #re.research_experiments(re.thread_varying_feedrate(extruder_vel))
+    #re.research_experiments(False, False, True)
+    re.research_experiments2(True)
+  
    
 
     

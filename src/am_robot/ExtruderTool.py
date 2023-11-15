@@ -2,6 +2,7 @@ import serial
 import math
 import struct
 import time
+from time import sleep
 
 from am_robot.AbstractTool import AbstractTool
 
@@ -292,3 +293,13 @@ class ExtruderTool(AbstractTool):
         Returns the relative velocity ratio between robot maximum and desired process speed
         '''
         return self.convert_per_minute_to_per_second(feedrate)/robot_vel_constraint
+    
+    def thread_varying_feedrate(self, extruder_vel):
+        sleep(0.5)
+        start_time = time.time()
+        while(time.time() - start_time) < 12.9: #Takes 12.9 sec to do 10cm relative motion with dynamic relative velocity 0.01
+            self.set_feedrate(0.75*extruder_vel)  # The coefficient might have to change
+            sleep(0.5)
+            self.set_feedrate(extruder_vel) 
+            sleep(0.5)
+        self.set_feedrate(0.0)
