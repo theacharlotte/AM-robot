@@ -22,6 +22,8 @@ Features are under development and spesifics can change as the project continues
 ## Getting started
 A Docker file is made to build a Docker container which sets up an environment with the necessary dependencies for working with the Panda robot and the AM-robot project.
 The Docker file and Docker commands can be found here:  https://github.com/theacharlotte/AM_robot_docker
+After building and runnung the docker, write the following command:
+pip install -e .
 
 The Docker file includes installation of libfranka v0.9.2 and frankx v0.2.0 for communication with Franka Emika Panda robot, and the dependencies for libfranka, frankx and AM_robot.
 Python 3.10 is installed as well as usefull packages such as git and GCC.
