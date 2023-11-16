@@ -55,7 +55,7 @@ def main():
     parser.add_argument('--home_mode', default='Guiding', type=str, help='Mode type for homing to (0,0) of Gcode point. Guiding to manually position end-effector nozzle')
     parser.add_argument('--gfile', default='Circle.gcode', type=str, help='Gcode file name')
 
-    parser.add_argument('--t_tool', default=[0,0,-0.1], type=list, help='Translation due to Tool as [x,y,z]')
+    parser.add_argument('--t_tool', default=[0,0,-0.1], type=list, help='Translation due to Tool as [x,y,z]') ##########
     parser.add_argument('--d_nozzle', default=0.8, type=float, help='Hot-End Nozzle diameter')
     parser.add_argument('--f_width', default=2.85, type=float, help='Width of filament used')
 
@@ -114,9 +114,6 @@ def main():
             except KeyboardInterrupt:
                 executor.tool.set_feedrate(0.0)
                 executor.tool.set_nozzletemp(0.0)
-                #temp = tool.read_temperature()
-                #while temp > 35:
-                #    print(tool.read_temperature())
                 exit()
 
             time_elapsed_task = time.time() - time_elapsed_task
@@ -131,9 +128,6 @@ def main():
 
     if not args.skip_connection:
         executor.tool.set_feedrate(0.0)
-        # temp = tool.read_temperature()
-        # while temp > 35:
-        #    print(tool.read_temperature())
         executor.tool.disconnect()
 
 
@@ -161,10 +155,12 @@ def main_read_temp():
 
     
 if __name__ == '__main__':
-    #main()
+    main()
+    #re.research_experiments_height()
     #main_read_temp()
     #re.research_experiments(False, False, True)
-    re.research_experiments2(True)
+    #re.research_experiments2(True)
+    #re.research_experiments_angle(45)
   
    
 

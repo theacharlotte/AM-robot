@@ -103,6 +103,9 @@ class GCodeExecutor(GCodeCommands):
         self.bed_plane_abcd = [0,0,0,0]
         self.next_segment = False
         self.use_frenet_serret = True
+        
+        self.bed_plane_transformation_matrix = None
+        self.tool_frame = None
 
     def get_interval(self):
         '''
@@ -494,7 +497,7 @@ class GCodeExecutor(GCodeCommands):
         else:
             print("Failed to home gcode zero... Check RobotMode input")
 
-    def move_to_point(self,x,y,z):  # todo
+    def move_to_point(self,x,y,z):     # vel  
         '''
         Move to desired location, using x,y,z and G-code home pose offset and tool_pose reference frame
 
@@ -511,7 +514,7 @@ class GCodeExecutor(GCodeCommands):
         -----
 
         '''
-        self.robot.set_dynamic_rel(0.1)
+        self.robot.set_dynamic_rel(0.1) # vel
         base_point = np.array([x,y,z])
         transformed_point = np.matmul(self.bed_plane_transformation_matrix,base_point)
         if self.next_segment:
@@ -621,11 +624,16 @@ class GCodeExecutor(GCodeCommands):
         a = ABxAC[0]
         b = ABxAC[1]
         c = ABxAC[2]
-        d = -(a*A[0] + b*A[1] + c*A[2])
+        A = A + [0.015*a,0.015*b,0.015*c]
+        print('FJOMPPPPPPPP')
+        #d = -(a*A[0] + b*A[1] + c*A[2]) ############################################# Dette blir nok ikke brukt!!!!
+        d = 0 # Is not used
         self.bed_plane_abcd = [a,b,c,d]
         # print(f"Bed plane coefficients: {self.bed_plane_abcd}")
 
     def calculate_bed_rotation_matrice(self):
+        offset_z_probe_to_bed = -0.0010 # From probing, the robot moved 0.0015 m "under the bed" due to the robot having flexible joints
+
         bed_normal_vec = np.array(self.bed_plane_abcd[0:3])
         robot_normal_vec = np.array([0.0,0.0,-1.0])  # Normal vector down
 
@@ -641,7 +649,7 @@ class GCodeExecutor(GCodeCommands):
         print(f"Angle between plane normals - Rotation around x-axis: {x_rot*180/math.pi}")
         print(f"Angle between plane normals - Rotation around y-axis: {y_rot*180/math.pi}")
 
-        T = self.robot.make_affine_object(0.0, 0.0, 0.0, a=0.0, b=y_rot, c=-x_rot)
+        T = self.robot.make_affine_object(0.0, 0.0, offset_z_probe_to_bed, a=0.0, b=y_rot, c=-x_rot)
         self.T_robot_bed = T
         self.robot.tool_frame = self.robot.tool_frame * self.T_robot_bed
         self.bed_plane_transformation_matrix = self.rotation_matrix(x_rot=x_rot,y_rot=-y_rot)
@@ -874,7 +882,7 @@ class GCodeExecutor(GCodeCommands):
         interval: [int,int]
             Interval for which to make the PathMotion object for
         corner_blend_threshold: float
-            radius for whech a new waypoint should be used as motion target
+            radius for which a new waypoint should be used as motion target
 
         Returns:
         -----
