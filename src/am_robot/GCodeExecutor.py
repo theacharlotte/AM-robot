@@ -493,7 +493,7 @@ class GCodeExecutor(GCodeCommands):
 
         elif homing_type == 'known':
             print("Set gcode_home to this value. Home point assumed known")
-            self.gcode_home_pose_vec = [0.48,0.0,0.0,-math.pi/3,0.0,0.0]
+            self.gcode_home_pose_vec = [0.32325372, 0.09250938, -0.11237811,0.0,0.0,0.0] # Changes to where you want home ved to be
         else:
             print("Failed to home gcode zero... Check RobotMode input")
 
@@ -625,14 +625,13 @@ class GCodeExecutor(GCodeCommands):
         b = ABxAC[1]
         c = ABxAC[2]
         A = A + [0.015*a,0.015*b,0.015*c]
-        print('FJOMPPPPPPPP')
         #d = -(a*A[0] + b*A[1] + c*A[2]) ############################################# Dette blir nok ikke brukt!!!!
         d = 0 # Is not used
         self.bed_plane_abcd = [a,b,c,d]
         # print(f"Bed plane coefficients: {self.bed_plane_abcd}")
 
     def calculate_bed_rotation_matrice(self):
-        offset_z_probe_to_bed = -0.0010 # From probing, the robot moved 0.0015 m "under the bed" due to the robot having flexible joints
+        offset_z_probe_to_bed = -0.00075 # From probing, the robot moved 0.0015 m "under the bed" due to the robot having flexible joints
 
         bed_normal_vec = np.array(self.bed_plane_abcd[0:3])
         robot_normal_vec = np.array([0.0,0.0,-1.0])  # Normal vector down
@@ -649,10 +648,13 @@ class GCodeExecutor(GCodeCommands):
         print(f"Angle between plane normals - Rotation around x-axis: {x_rot*180/math.pi}")
         print(f"Angle between plane normals - Rotation around y-axis: {y_rot*180/math.pi}")
 
-        T = self.robot.make_affine_object(0.0, 0.0, offset_z_probe_to_bed, a=0.0, b=y_rot, c=-x_rot)
-        self.T_robot_bed = T
-        self.robot.tool_frame = self.robot.tool_frame * self.T_robot_bed
+        T_robot_bed = self.robot.make_affine_object(0.0, 0.0, offset_z_probe_to_bed, a=0.0, b=y_rot, c=-x_rot) 
+        # self.T_robot_bed = T
+        self.robot.tool_frame = self.robot.tool_frame * T_robot_bed 
+        print('Tool frame: ', self.robot.tool_frame)
         self.bed_plane_transformation_matrix = self.rotation_matrix(x_rot=x_rot,y_rot=-y_rot)
+        print('Rotation matrix bed plane: ', self.bed_plane_transformation_matrix)
+
 
     def rotation_matrix(self,x_rot=0.0,y_rot=0.0,z_rot=0.0):
         # Rz = np.matrix([[math.cos(z_rot),-math.sin(z_rot), 0.0,0.0],

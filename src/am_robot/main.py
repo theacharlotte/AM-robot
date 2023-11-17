@@ -1,6 +1,7 @@
 # import sys
 import argparse
 import time
+import math
 
 from am_robot.GCodeExecutor import GCodeExecutor
 from am_robot.ExtruderTool import ExtruderTool
@@ -99,7 +100,15 @@ def main():
             bed_found = executor.probe_bed()
         else:
             bed_found = True
-            executor.bed_plane_transformation_matrix = executor.rotation_matrix()
+            T_bed_to_plane = executor.robot.make_affine_object(0.0, 0.0, 2.679, a=0.0, b=math.pi/12, c=0.0) # Found from calculating the rotation and translation
+            executor.robot.tool_frame = executor.robot.make_affine_object(0.034670, -0.011100, -0.093030, a = 0.000000, b = -0.790352, c = 0.003971) # Found from probing the bed
+            executor.robot.tool_frame = executor.robot.tool_frame * T_bed_to_plane # rotate and translate toolframe to new surface top. Rotate nozzle and move nozzle normal and on top of surface. Get correct coordinate system ift. nytt koordinatsystem
+            executor.bed_plane_transformation_matrix = [[ 9.99983362e-01, -9.95404090e-06,  5.76853559e-03],
+                                                        [ 0.00000000e+00,  9.99998511e-01,  1.72557245e-03],
+                                                        [-5.76854417e-03, -1.72554374e-03,  9.99981873e-01]] # Found when probing the bed # rotation matrix
+            R_bed_to_plane = executor.rotation_matrix(0, math.pi/12, 0)
+            executor.bed_plane_transformation_matrix = executor.bed_plane_transformation_matrix * R_bed_to_plane
+            # executor.bed_plane_transformation_matrix = executor.rotation_matrix()
 
         if bed_found and not args.skip_segments:
             # Make a bed mesh for knowing the surface flatness and location of build area

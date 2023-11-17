@@ -189,7 +189,7 @@ class FrankaRobot(AbstractRobot):
         self.robot.move(self.tool_frame, LinearMotion(self.robot_home_pose))
 
         self.home_pose = self.read_current_pose()
-        print(self.home_pose.vector())
+        print('Home pose vector', self.home_pose.vector())
         self.set_velocity_rel(0.05)
         self.set_acceleration_rel(0.05)
         self.set_jerk_rel(0.02)

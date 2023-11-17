@@ -302,9 +302,9 @@ def research_experiments_height():
         bed_found = executor.probe_bed()
 
         input("Press enter when the material is continously deposited")
-        for i in range(10):
-            executor.move_to_point(0.0, 0.0, i*0.0005)
-            sleep(1)
+        for i in range(1):
+            executor.move_to_point(0.0, 0.0, i*0.001)
+            sleep(10)
             i += 1
 
             
