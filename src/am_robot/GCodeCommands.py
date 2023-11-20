@@ -96,7 +96,7 @@ class GCodeCommands():
 
           
             velocity_multiplier = 1.0
-            feedrate_multiplier = 0.25 # To change how much feedrate, ad it was too much when printing a cube
+            feedrate_multiplier = 0.2 # To change how much feedrate, ad it was too much when printing a cube
             
             # set dynamic rel and relative max velocity based on feedrate
             rel_velocity = self.tool.calculate_max_rel_velocity(self.F,self.robot.max_cart_vel*1000)
@@ -112,10 +112,10 @@ class GCodeCommands():
 
                 # Due to no state feedback, extrusion is set as an approximate average
                 #self.tool.set_feedrate(self.F * rel_velocity * velocity_multiplier * feedrate_multiplier)
-                self.tool.set_feedrate(self.F * 0.00875)
+                self.tool.set_feedrate(rel_velocity * velocity_multiplier*1200)
                 print('feedrate: ', self.F * 0.00875)
                 print('self.F: ', self.F)
-                print('constraint*1000: ', self.robot.max_cart_vel*1000)
+                print('constraint*1000: ', self.robot.max_cart_vel*100)
              
 
             # start = time.perf_counter()
@@ -217,8 +217,11 @@ class GCodeCommands():
         if nr_keys == 0:
             # if not params move to default 0,0,0 start position
             self.move_to_point(x,y,z)
+            print('auto home if')
         else:
             self.move_to_point(self.Xmax[0],self.Ymax[0],self.Zmax[1]+0.02)
+            print('auto home else')
+
 
     def G29(self):
         print("Bed leveling - Not implemented (done pre-emptively)")

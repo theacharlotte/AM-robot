@@ -2,6 +2,7 @@ import os
 import time
 import math
 import sys
+import pickle
 
 import argparse
 import numpy as np
@@ -485,15 +486,24 @@ class GCodeExecutor(GCodeCommands):
             print("After positioning robot, open the EMERGENCY STOP button to its UP position! The robot should the have BLUE lights")
             input("Position end-effector nozzle < 1cm from desired (0,0) location.\nWhen satisfied with position, press Enter to continue...")
 
-            self.gcode_home_pose = self.robot.read_current_pose()
-            self.gcode_home_pose_vec = self.gcode_home_pose.vector()
+            self.gcode_home_pose_vec = self.robot.read_current_pose().vector()
+            
+            with open('gcode_home_pose_vec.pkl', 'wb') as file:
+                pickle.dump(self.gcode_home_pose_vec, file)
 
-            # Can potentially add collision detection here to further improve home point. 
-            # But new (0,0) point can be chosen from mid point of bed probing afterwards
 
         elif homing_type == 'known':
+            self.robot.robot_init_move()
+
             print("Set gcode_home to this value. Home point assumed known")
-            self.gcode_home_pose_vec = [0.32325372, 0.09250938, -0.11237811,0.0,0.0,0.0] # Changes to where you want home ved to be
+            with open('gcode_home_pose_vec.pkl', 'rb') as file:
+                gcode_home_pose_vec = pickle.load(file)
+
+            self.gcode_home_pose_vec = gcode_home_pose_vec *0
+
+                
+            print('gcode_home_pose_vec sat to: ', self.gcode_home_pose_vec)
+            #self.gcode_home_pose_vec = [0.32325372, 0.09250938, -0.11237811,0.0,0.0,0.0] # Changes to where you want home ved to be
         else:
             print("Failed to home gcode zero... Check RobotMode input")
 
@@ -526,7 +536,7 @@ class GCodeExecutor(GCodeCommands):
         self.robot.execute_move(frame=self.robot.tool_frame,motion=motion)
         self.robot.recover_from_errors()
 
-    def probe_bed(self):
+    def probe_bed(self, skip_probe, use_pose_transformation):
         '''
         Probe the bed in a grid using motion force feedback to detect surface. Contact points are used to calculate the surface flatness.
 
@@ -546,48 +556,59 @@ class GCodeExecutor(GCodeCommands):
 
         contact_found = True
 
-        for axis1 in range(3):
-            for axis2 in range(3):
+        if skip_probe == False:
+            for axis1 in range(3):
+                for axis2 in range(3):
+    
+                    self.robot.set_dynamic_rel(0.1)
+                    # Move to probe location
+                    affine1 = self.robot.make_affine_object(probe_locations_xy[axis1][axis2][0] + self.gcode_home_pose_vec[0],probe_locations_xy[axis1][axis2][1] + self.gcode_home_pose_vec[1],self.gcode_home_pose_vec[2]+0.02)
+                    m1 = self.robot.make_linear_motion(affine1)
+                    self.robot.execute_move(frame=self.robot.tool_frame,motion=m1)
 
-                self.robot.set_dynamic_rel(0.1)
-                # Move to probe location
-                affine1 = self.robot.make_affine_object(probe_locations_xy[axis1][axis2][0] + self.gcode_home_pose_vec[0],probe_locations_xy[axis1][axis2][1] + self.gcode_home_pose_vec[1],self.gcode_home_pose_vec[2]+0.02)
-                m1 = self.robot.make_linear_motion(affine1)
-                self.robot.execute_move(frame=self.robot.tool_frame,motion=m1)
+                    # Reset data reaction motion, may need to tweek trigger force when extruder is mounted
+                    d2 = MotionData().with_reaction(Reaction(Measure.ForceZ < -5.0))
 
-                # Reset data reaction motion, may need to tweek trigger force when extruder is mounted
-                # d2 = self.robot.make_Z_reaction_data(-5.0)
-                d2 = MotionData().with_reaction(Reaction(Measure.ForceZ < -5.0))
-                # d2 = MotionData().with_reaction(Reaction(Measure.ForceXYZNorm > 15.0))
+                    # Reduce dynamics for probing
+                    self.robot.set_dynamic_rel(0.02)
 
-                # Reduce dynamics for probing
-                self.robot.set_dynamic_rel(0.02)
+                    # Move slowly towards print bed
+                    affine2 = self.robot.make_affine_object(0.1,0.0,-0.1)
+                    m2 = self.robot.make_linear_relative_motion(affine2)
+                    self.robot.execute_reaction_move(motion=m2,data=d2)
 
-                # Move slowly towards print bed
-                affine2 = self.robot.make_affine_object(0.1,0.0,-0.1)
-                m2 = self.robot.make_linear_relative_motion(affine2)
-                self.robot.execute_reaction_move(motion=m2,data=d2)
+                    # Check if the reaction was triggered
+                    if d2.did_break:
+                        self.robot.recover_from_errors()
+                        print('Force exceeded 5N!')
+                        print(f"Hit something for probe location x: {axis1}, y: {axis2}")
 
-                # Check if the reaction was triggered
-                if d2.did_break:
-                    self.robot.recover_from_errors()
-                    print('Force exceeded 5N!')
-                    print(f"Hit something for probe location x: {axis1}, y: {axis2}")
+                        current_pose = self.robot.read_current_pose()
+                        vector_pose = current_pose.vector()
+                        probe_point = vector_pose[0:3]
+                        bed_grid[axis1][axis2] = probe_point
 
-                    current_pose = self.robot.read_current_pose()
-                    vector_pose = current_pose.vector()
-                    probe_point = vector_pose[0:3]
-                    bed_grid[axis1][axis2] = probe_point
-
-                elif not d2.did_break:
-                    print(f"Did not hit anything for probe location x: {axis1}, y: {axis2}")
-                    contact_found = False
+                    elif not d2.did_break:
+                        print(f"Did not hit anything for probe location x: {axis1}, y: {axis2}")
+                        contact_found = False
+                    
+            # Save bed grid to file for use later without probing
+            with open('bed_grid.pkl', 'wb') as file:
+                pickle.dump(bed_grid, file)
+            
+        else:
+            # Read bed_points from the file
+            with open('bed_grid.pkl', 'rb') as file:
+                bed_grid = pickle.load(file)
+            
+            if not bed_grid:
+                contact_found = False
 
         if contact_found:
             self.bed_points = bed_grid
-            self.calculate_bed_surface_plane()
+            self.calculate_bed_surface_plane(use_pose_transformation)
             self.calculate_bed_rotation_matrice()
-            self.gcode_home_pose_vec = bed_grid[1][1]
+            self.gcode_home_pose_vec = [x + y for x, y in zip(bed_grid[1][1],use_pose_transformation[0:3])]
             print(f"Gcode home location: {self.gcode_home_pose_vec}")
         else:
             print("One or more bed points was not found")
@@ -601,7 +622,7 @@ class GCodeExecutor(GCodeCommands):
 
         return contact_found
 
-    def calculate_bed_surface_plane(self):
+    def calculate_bed_surface_plane(self, use_pose_transformation):
         '''
         Calculate the plane equation given by ax + by + cz + d = 0 with points taken from the bed probing process. Uses 3 non-collinear points A, B and C and calculates the cross product AB x AC = [a,b,c] and d = -(aAx + bAy + cAz)
 
@@ -625,10 +646,11 @@ class GCodeExecutor(GCodeCommands):
         b = ABxAC[1]
         c = ABxAC[2]
         A = A + [0.015*a,0.015*b,0.015*c]
-        #d = -(a*A[0] + b*A[1] + c*A[2]) ############################################# Dette blir nok ikke brukt!!!!
-        d = 0 # Is not used
+        d = 0 # Is not used. d = -(a*A[0] + b*A[1] + c*A[2])
         self.bed_plane_abcd = [a,b,c,d]
-        # print(f"Bed plane coefficients: {self.bed_plane_abcd}")
+        if use_pose_transformation:
+            print('use_pose_transformation[0:6]: ',use_pose_transformation[0:6] )
+            self.bed_plane_abcd[0:3] = np.matmul(self.rotation_matrix(use_pose_transformation[3] ,use_pose_transformation[4] ,use_pose_transformation[5]), self.bed_plane_abcd[0:3])
 
     def calculate_bed_rotation_matrice(self):
         offset_z_probe_to_bed = -0.00075 # From probing, the robot moved 0.0015 m "under the bed" due to the robot having flexible joints
@@ -649,28 +671,15 @@ class GCodeExecutor(GCodeCommands):
         print(f"Angle between plane normals - Rotation around y-axis: {y_rot*180/math.pi}")
 
         T_robot_bed = self.robot.make_affine_object(0.0, 0.0, offset_z_probe_to_bed, a=0.0, b=y_rot, c=-x_rot) 
-        # self.T_robot_bed = T
+   
         self.robot.tool_frame = self.robot.tool_frame * T_robot_bed 
+
         print('Tool frame: ', self.robot.tool_frame)
         self.bed_plane_transformation_matrix = self.rotation_matrix(x_rot=x_rot,y_rot=-y_rot)
         print('Rotation matrix bed plane: ', self.bed_plane_transformation_matrix)
 
 
     def rotation_matrix(self,x_rot=0.0,y_rot=0.0,z_rot=0.0):
-        # Rz = np.matrix([[math.cos(z_rot),-math.sin(z_rot), 0.0,0.0],
-        #                 [math.sin(z_rot),math.cos(z_rot),0.0,0.0],
-        #                 [0.0,0.0,1.0,0.0],
-        #                 [0.0,0.0,0.0,1.0]])
-        # Ry = np.matrix([[math.cos(y_rot),0.0,math.sin(y_rot),0.0],
-        #                 [0.0,1.0,0.0,0.0],
-        #                 [-math.sin(y_rot),0.0,math.cos(y_rot),0.0],
-        #                 [0.0,0.0,0.0,1.0]])
-        # Rx = np.matrix([[1.0,0.0,0.0,0.0],
-        #                 [0.0,math.cos(x_rot),-math.sin(x_rot),0.0],
-        #                 [0.0,math.sin(x_rot),math.cos(x_rot),0.0],
-        #                 [0.0,0.0,0.0,1.0]])
-        # R = np.matmul(Rz,np.matmul(Ry,Rx))
-
         return rotation_from_angles([z_rot, y_rot, x_rot], 'ZYX')
 
     def does_model_fit_bed(self):

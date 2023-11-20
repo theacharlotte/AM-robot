@@ -56,7 +56,7 @@ def main():
     parser.add_argument('--home_mode', default='Guiding', type=str, help='Mode type for homing to (0,0) of Gcode point. Guiding to manually position end-effector nozzle')
     parser.add_argument('--gfile', default='Circle.gcode', type=str, help='Gcode file name')
 
-    parser.add_argument('--t_tool', default=[0,0,-0.1], type=list, help='Translation due to Tool as [x,y,z]') ##########
+    parser.add_argument('--t_tool', default=[0,0,-0.1], type=list, help='Translation due to Tool as [x,y,z]') 
     parser.add_argument('--d_nozzle', default=0.8, type=float, help='Hot-End Nozzle diameter')
     parser.add_argument('--f_width', default=2.85, type=float, help='Width of filament used')
 
@@ -65,6 +65,7 @@ def main():
     parser.add_argument('--skip_connection', action='store_true', help='If specified, skips the connection to robot. For testing out-of-lab. Also defaults too True if visualize is True')
     parser.add_argument('--skip_probe', action='store_true', help='If specified, skips the bed probing step')
     parser.add_argument('--skip_segments', action='store_true', help='If specified, skips the G-code segments')
+    #This does not work for now parser.add_argument('--use_pose_transformation', default=[0,0,0,0,0,0], type=list, help='If specified, changes the plane bed with the affine transformation: [x,y,z,z_rot,y_rot,x_rot]')
     args = parser.parse_args()
 
     time_elapsed_task = time.time()
@@ -96,20 +97,13 @@ def main():
         # executor.robot.gripper.clamp(0.005)
 
         # Uses force feedback to determine where n points of the print bed are located
+        use_pose_transformation = [0,0,0.002679,0,math.pi/12,0]
+        use_pose_transformation = [0, 0, 0, 0, 0, 0]
         if not args.skip_probe:
-            bed_found = executor.probe_bed()
+            bed_found = executor.probe_bed(False, use_pose_transformation)
         else:
-            bed_found = True
-            T_bed_to_plane = executor.robot.make_affine_object(0.0, 0.0, 2.679, a=0.0, b=math.pi/12, c=0.0) # Found from calculating the rotation and translation
-            executor.robot.tool_frame = executor.robot.make_affine_object(0.034670, -0.011100, -0.093030, a = 0.000000, b = -0.790352, c = 0.003971) # Found from probing the bed
-            executor.robot.tool_frame = executor.robot.tool_frame * T_bed_to_plane # rotate and translate toolframe to new surface top. Rotate nozzle and move nozzle normal and on top of surface. Get correct coordinate system ift. nytt koordinatsystem
-            executor.bed_plane_transformation_matrix = [[ 9.99983362e-01, -9.95404090e-06,  5.76853559e-03],
-                                                        [ 0.00000000e+00,  9.99998511e-01,  1.72557245e-03],
-                                                        [-5.76854417e-03, -1.72554374e-03,  9.99981873e-01]] # Found when probing the bed # rotation matrix
-            R_bed_to_plane = executor.rotation_matrix(0, math.pi/12, 0)
-            executor.bed_plane_transformation_matrix = executor.bed_plane_transformation_matrix * R_bed_to_plane
-            # executor.bed_plane_transformation_matrix = executor.rotation_matrix()
-
+            bed_found = executor.probe_bed(True, use_pose_transformation)
+                
         if bed_found and not args.skip_segments:
             # Make a bed mesh for knowing the surface flatness and location of build area
             if args.visualize:
