@@ -25,6 +25,9 @@ elif sys.platform == 'win32':
     finally:
         print('Running on OS: ' + sys.platform)
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class GCodeExecutor(GCodeCommands):
     '''
@@ -616,8 +619,10 @@ class GCodeExecutor(GCodeCommands):
         self.robot.recover_from_errors()
 
         self.robot.set_dynamic_rel(0.1)
-        m1 = self.robot.make_linear_motion(self.robot.robot_home_pose)
+        m1 = self.robot.robot_home_pose* self.robot.make_affine_object(0, 0.0, 0.2,0,0,0) 
+        m1 = self.robot.make_linear_motion(m1)
         self.robot.execute_move(frame=self.robot.tool_frame,motion=m1)
+
         self.robot.recover_from_errors()
 
         return contact_found
@@ -990,13 +995,17 @@ class GCodeExecutor(GCodeCommands):
     def run_code_segments(self):
         prev_progress = 0
         self.robot.set_velocity_rel(1.0)
-        for interval in self.list_of_intervals:
+        for interval in self.list_of_intervals: ##Her på jeg ta tiden  ########################################################################
             progress = math.floor((100 * interval[0])/(self.number_of_lines - 1.0))
             if progress > prev_progress:
                 print(f"Current progress is {progress}%, on line {interval[0]} of {self.number_of_lines}.")
                 prev_progress = progress
             self.interval = interval
+            start_time = time.time()
             self.run_code_segment()
+            elapsed_time = time.time()-start_time
+            log.debug(f"Segment took in seconds to complete segment {elapsed_time}")
+            log.debug(f"Segment printed: {interval}")
 
     # Blocking action
     def run_code_segment(self):

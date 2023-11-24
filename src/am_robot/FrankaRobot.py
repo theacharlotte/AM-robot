@@ -15,6 +15,9 @@ elif sys.platform == 'win32':
     finally:
         print('Running on OS: ' + sys.platform)
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class FrankaRobot(AbstractRobot):
     '''
@@ -67,6 +70,9 @@ class FrankaRobot(AbstractRobot):
                 self.max_cart_vel = self.robot.max_translation_velocity  # m/s max cartesian velocity
                 self.max_cart_acc = self.robot.max_translation_acceleration  # m/s² max cartesian acceleration
                 self.max_cart_jerk = self.robot.max_translation_jerk  # m/s³ max cartesion jerk
+                log.debug(f"Max Cartesian Velocity: {self.max_cart_vel}")
+                log.debug(f"Max Cartesian Acceleration: {self.max_cart_acc}")
+                log.debug(f"Max Cartesian Jerk: {self.max_cart_jerk}")
             except Exception as e:
                 print("Could not connect to robot on host IP: " + self.host + "\n")
                 raise e
@@ -126,8 +132,11 @@ class FrankaRobot(AbstractRobot):
         -----
 
         '''
+        log.debug(f"Linear move to point X: {X}, Y: {Y}, Z: {Z}")
         move = LinearMotion(Affine(X, Y, Z))
         self.robot.move(self.tool_frame, move)
+        log.debug(f"Current robot pose: {self.read_current_pose()}")
+    
 
     def follow_waypoints(self, waypoints):
         '''
@@ -189,7 +198,7 @@ class FrankaRobot(AbstractRobot):
         self.robot.move(self.tool_frame, LinearMotion(self.robot_home_pose))
 
         self.home_pose = self.read_current_pose()
-        print('Home pose vector', self.home_pose.vector())
+        print(self.home_pose.vector())
         self.set_velocity_rel(0.05)
         self.set_acceleration_rel(0.05)
         self.set_jerk_rel(0.02)
@@ -216,6 +225,7 @@ class FrankaRobot(AbstractRobot):
         self.robot.recover_from_errors()
 
     def set_dynamic_rel(self, value):
+        log.debug(f"Setting dynamic relative: {value}")
         self.robot.set_dynamic_rel(value)
 
     def set_velocity_rel(self, value):
@@ -285,4 +295,9 @@ class FrankaRobot(AbstractRobot):
             v_list.append(state.ds)
             a_list.append(state.dds)
             j_list.append(state.ddds)
+            log.debug(f"Trajectory Time List: {t_list}")
+            log.debug(f"Trajectory Position List: {s_list}")
+            log.debug(f"Trajectory Velocity List: {v_list}")
+            log.debug(f"Trajectory Acceleration List: {a_list}")
+            log.debug(f"Trajectory Jerk List: {j_list}")
         return np.array(t_list), np.array(s_list), np.array(v_list), np.array(a_list), np.array(j_list)

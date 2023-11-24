@@ -2,6 +2,9 @@ import time
 import numpy as np
 import time
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class GCodeCommands():
     '''
@@ -82,8 +85,8 @@ class GCodeCommands():
             rel_velocity = self.tool.calculate_max_rel_velocity(self.F,self.robot.max_cart_vel*1000)
             # self.robot.set_velocity_rel(rel_velocity)
 
-            motion_data = self.robot.set_dynamic_motion_data(0.2)
-            motion_data.velocity_rel = rel_velocity * 5.0 * velocity_multiplier
+            motion_data = self.robot.set_dynamic_motion_data(0.2) #hva er forskjell på denne og Tror denne er tull, overskjørt i neste linje, eg. 0.2 overkjørt
+            motion_data.velocity_rel = rel_velocity * 5.0 * velocity_multiplier #denne
             motion, path = self.make_path(self.interval,0.01,motion_data)
             # self.robot.velocity_rel = self.tool.calculate_max_rel_velocity(self.F,self.robot.max_cart_vel)
 
@@ -95,7 +98,7 @@ class GCodeCommands():
         if (self.read_param(self.interval[0],'X') is not False) or (self.read_param(self.interval[0],'Y') is not False) or (self.read_param(self.interval[0],'Z') is not False):
 
           
-            velocity_multiplier = 1.0
+            velocity_multiplier = 2.0
             feedrate_multiplier = 0.2 # To change how much feedrate, ad it was too much when printing a cube
             
             # set dynamic rel and relative max velocity based on feedrate
@@ -112,11 +115,12 @@ class GCodeCommands():
 
                 # Due to no state feedback, extrusion is set as an approximate average
                 #self.tool.set_feedrate(self.F * rel_velocity * velocity_multiplier * feedrate_multiplier)
-                self.tool.set_feedrate(rel_velocity * velocity_multiplier*1200)
-                print('feedrate: ', self.F * 0.00875)
-                print('self.F: ', self.F)
-                print('constraint*1000: ', self.robot.max_cart_vel*100)
-             
+                self.tool.set_feedrate(rel_velocity * velocity_multiplier*533)
+                
+                
+                log.debug(f"Robot velocity % of max rel_velocity: {motion_data.velocity_rel}")
+                log.debug(f"Fedrate: {rel_velocity * velocity_multiplier*400}")
+    
 
             # start = time.perf_counter()
             # feed path motion to robot and move using a separate thread

@@ -204,26 +204,25 @@ def research_experiments_angle(angle_deg, leglength_m):
 
     if executor.robot.is_connected:
 
-        temp = 200
-        feedrate = 400
+        temp = 210
+        feedrate = 10
         vel = 0.05
         nozzle_height = 0.002
         leglength_m = 0.05
-        
+        tool.set_feedrate(feedrate)
         # Heat up extruder
         tool.set_nozzletemp(temp)
 
-        while tool.read_temperature() < (temp - 5.0):
+        while True:
             print(tool.read_temperature())
             pass
 
         # Start extruder
         tool.set_feedrate(feedrate) 
-        tool.set_nozzletemp(200)
-        tool.set_feedrate(300)
+        tool.set_nozzletemp(210)
+        tool.set_feedrate(100)
         input("Press enter when the material is continously deposited")
-        tool.set_feedrate(0) 
-        tool.set_nozzletemp(0)
+      
 
         # Manually position end effector/extrusion nozzle at 'home' point
         executor.home_gcode(args.home_mode)

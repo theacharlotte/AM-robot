@@ -8,6 +8,9 @@ from am_robot.ExtruderTool import ExtruderTool
 from am_robot.FrankaRobot import FrankaRobot
 import am_robot.ResearchExperiments as re
 
+import logging
+log = logging.getLogger(__name__)
+
 # if sys.platform == 'linux':
 #     from frankx import Robot
 # elif sys.platform == 'win32':
@@ -97,7 +100,7 @@ def main():
         # executor.robot.gripper.clamp(0.005)
 
         # Uses force feedback to determine where n points of the print bed are located
-        use_pose_transformation = [0,0,0.002679,0,math.pi/12,0]
+        use_pose_transformation = [0,0.005,0.03598076211,60*math.pi/180,0,0]
         use_pose_transformation = [0, 0, 0, 0, 0, 0]
         if not args.skip_probe:
             bed_found = executor.probe_bed(False, use_pose_transformation)
@@ -158,7 +161,13 @@ def main_read_temp():
 
     
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s: %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    handlers=[logging.FileHandler("robot_debug.log"),
+                              logging.StreamHandler()])
     main()
+    #re.research_experiments_angle(30, 0.05)
     #re.research_experiments_height()
     #main_read_temp()
     #re.research_experiments(False, False, True)
