@@ -59,28 +59,29 @@ def main():
     parser.add_argument('--home_mode', default='Guiding', type=str, help='Mode type for homing to (0,0) of Gcode point. Guiding to manually position end-effector nozzle')
     parser.add_argument('--gfile', default='Circle.gcode', type=str, help='Gcode file name')
 
-    parser.add_argument('--t_tool', default=[0,0,-0.1], type=list, help='Translation due to Tool as [x,y,z]') 
-    parser.add_argument('--d_nozzle', default=0.8, type=float, help='Hot-End Nozzle diameter')
-    parser.add_argument('--f_width', default=2.85, type=float, help='Width of filament used')
+    #parser.add_argument('--t_tool', default=[0,0,-0.1], type=list, help='Translation due to Tool as [x,y,z]') 
+    #parser.add_argument('--d_nozzle', default=0.8, type=float, help='Hot-End Nozzle diameter')
+    #parser.add_argument('--f_width', default=2.85, type=float, help='Width of filament used')
 
-    parser.add_argument('--visualize', action='store_true', help='If specified, visualize the given Gcode as a 3D plot')
+    #parser.add_argument('--visualize', action='store_true', help='If specified, visualize the given Gcode as a 3D plot')
     parser.add_argument('--lines', default=100000000, type=int, help='Max number of lines to process, default is higher than ever expected')
-    parser.add_argument('--skip_connection', action='store_true', help='If specified, skips the connection to robot. For testing out-of-lab. Also defaults too True if visualize is True')
+    #parser.add_argument('--skip_connection', action='store_true', help='If specified, skips the connection to robot. For testing out-of-lab. Also defaults too True if visualize is True')
     parser.add_argument('--skip_probe', action='store_true', help='If specified, skips the bed probing step')
-    parser.add_argument('--skip_segments', action='store_true', help='If specified, skips the G-code segments')
+    #parser.add_argument('--skip_segments', action='store_true', help='If specified, skips the G-code segments')
     #This does not work for now parser.add_argument('--use_pose_transformation', default=[0,0,0,0,0,0], type=list, help='If specified, changes the plane bed with the affine transformation: [x,y,z,z_rot,y_rot,x_rot]')
     args = parser.parse_args()
 
     time_elapsed_task = time.time()
     time_elapsed_total = time.time()
 
-    tool = ExtruderTool(args.tool,'FDM',args.f_width,args.d_nozzle,args.t_tool,args.skip_connection)
-    robot = FrankaRobot(args.host,args.skip_connection)
+    tool = ExtruderTool(args.tool,'FDM')
+    robot = FrankaRobot(args.host)
     executor = GCodeExecutor(args.gfile,robot,tool)
     executor.load_gcode(args.lines)
 
     print("Done pre-processing gcode")
 
+    '''
     if args.visualize:
         time_elapsed_task = time.time()
         executor.display()
@@ -90,6 +91,7 @@ def main():
         print(f"Visualization done in {time_elapsed_task:.5f}s")
 
         input("Press Enter to continue if satisfied with model plot...")
+    '''
 
     if executor.robot.is_connected:
         # Manually position end effector/extrusion nozzle at 'home' point
@@ -107,12 +109,13 @@ def main():
         else:
             bed_found = executor.probe_bed(True, use_pose_transformation)
                 
-        if bed_found and not args.skip_segments:
+        if bed_found:
             # Make a bed mesh for knowing the surface flatness and location of build area
+            '''
             if args.visualize:
                 executor.visualize_bed_mesh()
                 input("When happy with bed mesh press enter...")
-
+            '''
             time_elapsed_task = time.time()
 
             try:
@@ -131,32 +134,11 @@ def main():
 
     print(f"Task done in {time_elapsed_task:.5f}s")
     print(f"Total time elapsed: {time_elapsed_total:.5f}s")
-
+    '''
     if not args.skip_connection:
         executor.tool.set_feedrate(0.0)
         executor.tool.disconnect()
-
-
-def main_read_temp():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.MetavarTypeHelpFormatter,
-        description=('''Package for controlling a 3D printing on 7 DoF robotic arm'''),
-        epilog='This is still under development',
-        add_help=True)
-
-    parser.add_argument('--tool', default='/dev/ttyUSB0', type=str, help='Serial connection of the tool used')
-
-    parser.add_argument('--t_tool', default=[0,0,-0.1], type=list, help='Translation due to Tool as [x,y,z]')
-    parser.add_argument('--d_nozzle', default=0.8, type=float, help='Hot-End Nozzle diameter')
-    parser.add_argument('--f_width', default=2.85, type=float, help='Width of filament used')
-
-    parser.add_argument('--skip_connection', action='store_true', help='If specified, skips the connection to robot. For testing out-of-lab. Also defaults too True if visualize is True')
-
-    args = parser.parse_args()
-    tool = ExtruderTool(args.tool,'FDM',args.f_width,args.d_nozzle,args.t_tool,args.skip_connection)
-
-    while True:
-        print(tool.read_temperature())
+    '''
 
 
     

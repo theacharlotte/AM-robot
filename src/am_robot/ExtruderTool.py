@@ -21,7 +21,7 @@ class ExtruderTool(AbstractTool):
     feedrate: float
         feedrate in mm/s
     '''
-    def __init__(self,port,tooltype,filament_width,nozzle_diameter,tool_transformation,skip_connection):
+    def __init__(self,port,tooltype):
         '''
         Initialize extruder tool
 
@@ -36,13 +36,12 @@ class ExtruderTool(AbstractTool):
 
         self.tooltype = tooltype
         self.port = port
-        self.filament_width = filament_width
-        self.nozzle_diameter = nozzle_diameter
-        self.T_tool = tool_transformation
+        #self.filament_width = filament_width
+        # self.nozzle_diameter = nozzle_diameter
+        #self.T_tool = tool_transformation
 
-        if not skip_connection:
-            print(self.port)
-            self.ser = serial.Serial(self.port)
+        print(self.port)
+        self.ser = serial.Serial(self.port)
 
         self.motor_steps_per_revolution = 400.0
         self.micro_stepping = 16.0
@@ -64,9 +63,10 @@ class ExtruderTool(AbstractTool):
 
         '''
         self.ser.close()
-
+    """
     def __str__(self):
         return "ToolType = "+str(self.tooltype)
+    """
 
     def set_feedrate(self,feedrate):
         '''
@@ -102,6 +102,7 @@ class ExtruderTool(AbstractTool):
         packed = struct.pack('f',temperature)
         self.ser.write(b'H'+packed)  # + 4 bytes of number
 
+    """
     def blink_led(self):
         '''
         Blink the arduino led once
@@ -114,7 +115,8 @@ class ExtruderTool(AbstractTool):
 
         '''
         self.ser.write(b'B')
-
+    """
+    """
     def set_fanspeed(self,speed):
         '''
         Sets the fanspeed
@@ -127,7 +129,8 @@ class ExtruderTool(AbstractTool):
 
         '''
         print(" Fan speed not implemented")
-
+    """
+    """
     def disable_fan(self):
         '''
         Turns off fans
@@ -140,7 +143,7 @@ class ExtruderTool(AbstractTool):
 
         '''
         print("Disable fan not implemented")
-
+    """
     def read_temperature(self):
         '''
         Read and return temperature of hotend in Celsius
@@ -172,7 +175,7 @@ class ExtruderTool(AbstractTool):
             else:
                 print("Value other than T read. Ignoring...")
 
-    def read_extrusion_speed(self):
+    def read_extrusion_speed(self):  ## Unused now, but might be useful in feedback loop
         '''
         Read and return extrusion rate in mm/s
 
@@ -270,23 +273,27 @@ class ExtruderTool(AbstractTool):
         '''
         return value_per_minute/60.0
 
+    """
     def convert_per_second_to_per_minute(self,value_per_second):
         '''
         Multiplies by 60
         '''
         return value_per_second*60.0
+    """
+    """
 
     def calculate_difference(self,first_value,second_value):
         '''
         Returns the difference of two values
         '''
         return second_value-first_value
+    """
 
     def calculate_delta_t(self,first_value,second_value,feedrate):
         '''
         Returns the time taken to process the difference between two distances
         '''
-        return self.calculate_difference(first_value,second_value)/self.convert_per_minute_to_per_second(feedrate)
+        return (second_value - first_value)/self.convert_per_minute_to_per_second(feedrate)
 
     def calculate_max_rel_velocity(self,feedrate,robot_vel_constraint):
         '''
@@ -294,6 +301,7 @@ class ExtruderTool(AbstractTool):
         '''
         return self.convert_per_minute_to_per_second(feedrate)/robot_vel_constraint
     
+    """
     def thread_varying_feedrate(self, extruder_vel):
         sleep(0.5)
         start_time = time.time()
@@ -303,3 +311,4 @@ class ExtruderTool(AbstractTool):
             self.set_feedrate(extruder_vel) 
             sleep(0.5)
         self.set_feedrate(0.0)
+    """

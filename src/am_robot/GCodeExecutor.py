@@ -106,7 +106,7 @@ class GCodeExecutor(GCodeCommands):
         # default planar bed
         self.bed_plane_abcd = [0,0,0,0]
         self.next_segment = False
-        self.use_frenet_serret = True
+        #self.use_frenet_serret = True
         
         self.bed_plane_transformation_matrix = None
         self.tool_frame = None
@@ -171,6 +171,7 @@ class GCodeExecutor(GCodeCommands):
         '''
         return self.gcodelines[line_number].command[0] + str(self.gcodelines[line_number].command[1])
 
+    """
     def get_command(self):
         '''
         Returns the current command
@@ -185,7 +186,8 @@ class GCodeExecutor(GCodeCommands):
 
         '''
         return self.command
-
+    """
+    """
     def set_command(self):
         '''
         Sets the first command of the current interval
@@ -200,6 +202,7 @@ class GCodeExecutor(GCodeCommands):
         interval = self.interval
         command = self.read_command(interval[0])
         self.command = command
+    """
 
     # read given param from gcode
     def read_param(self,line_number,param):
@@ -326,7 +329,8 @@ class GCodeExecutor(GCodeCommands):
 
         '''
         if self.list_of_intervals == []:
-            self.append_interval()
+            #self.append_interval()
+            self.list_of_intervals.append(self.interval)
 
         if self.interval[1]+1 >= self.number_of_lines:
             print("End of code")
@@ -398,7 +402,8 @@ class GCodeExecutor(GCodeCommands):
         # if self.read_command(self.interval[1]+1) == 'G1':
         #     print(interval)
         self.set_interval(interval)
-        self.append_interval()
+        #self.append_interval()
+        self.list_of_intervals.append(self.interval)
 
     def find_intervals(self):
         '''
@@ -502,7 +507,7 @@ class GCodeExecutor(GCodeCommands):
             with open('gcode_home_pose_vec.pkl', 'rb') as file:
                 gcode_home_pose_vec = pickle.load(file)
 
-            self.gcode_home_pose_vec = gcode_home_pose_vec *0
+            #self.gcode_home_pose_vec = gcode_home_pose_vec *0
 
                 
             print('gcode_home_pose_vec sat to: ', self.gcode_home_pose_vec)
@@ -532,9 +537,9 @@ class GCodeExecutor(GCodeCommands):
         transformed_point = np.matmul(self.bed_plane_transformation_matrix,base_point)
         if self.next_segment:
             transformed_point = np.matmul(self.active_plane,transformed_point)
-            transformed_point[0] += self.active_displacement[0]
-            transformed_point[1] += self.active_displacement[1]
-            transformed_point[2] += self.active_displacement[2]
+            #transformed_point[0] += self.active_displacement[0]
+            #transformed_point[1] += self.active_displacement[1]
+            #transformed_point[2] += self.active_displacement[2]
         motion = self.robot.make_linear_motion(self.robot.make_affine_object(transformed_point[0] + self.gcode_home_pose_vec[0],transformed_point[1] + self.gcode_home_pose_vec[1],transformed_point[2] + self.gcode_home_pose_vec[2]))
         self.robot.execute_move(frame=self.robot.tool_frame,motion=motion)
         self.robot.recover_from_errors()
@@ -578,7 +583,7 @@ class GCodeExecutor(GCodeCommands):
                     # Move slowly towards print bed
                     affine2 = self.robot.make_affine_object(0.1,0.0,-0.1)
                     m2 = self.robot.make_linear_relative_motion(affine2)
-                    self.robot.execute_reaction_move(motion=m2,data=d2)
+                    self.robot.execute_move(motion=m2,data=d2)
 
                     # Check if the reaction was triggered
                     if d2.did_break:
@@ -687,6 +692,7 @@ class GCodeExecutor(GCodeCommands):
     def rotation_matrix(self,x_rot=0.0,y_rot=0.0,z_rot=0.0):
         return rotation_from_angles([z_rot, y_rot, x_rot], 'ZYX')
 
+    """
     def does_model_fit_bed(self):
         '''
         Checks whether the physical dimension of  the model will fit in the build area
@@ -711,7 +717,8 @@ class GCodeExecutor(GCodeCommands):
             return False
         else:
             return True
-
+    """
+    """
     def is_build_feasible(self):
         '''
         Checks if build is feasible for the chosen G-code home point.
@@ -754,7 +761,8 @@ class GCodeExecutor(GCodeCommands):
         self.is_area_clear = True
 
         return True
-
+    """
+    """
     def turn_angle(self,line_number):
         '''
         Check if trajectory sharply changes direction
@@ -778,9 +786,11 @@ class GCodeExecutor(GCodeCommands):
         else:
             angle = self.angle_between(v1,v2)
             return angle
-
+    """
+    """
     def make_vector(self,start, end):
         return end - start
+    """
 
     def unit_vector(self,vector):
         """ Returns the unit vector of the vector.  """
@@ -805,6 +815,7 @@ class GCodeExecutor(GCodeCommands):
             values = v1[np.nonzero(v1)]
             return np.sign(values[0])*angle
 
+    """
     def slope_angles(self,start_point,end_point):
         # Find tangent vector from point to point
         tangent_vec = end_point - start_point
@@ -841,7 +852,8 @@ class GCodeExecutor(GCodeCommands):
         # print(f"Angle between plane normals - Rotation around y-axis: {y_rot*180/math.pi}")
 
         return [x_rot, y_rot, slope]
-
+    """
+    """
     def make_waypoints(self,interval):
         '''
         Generate waypoint objects for motion trajectory to follow
@@ -879,16 +891,16 @@ class GCodeExecutor(GCodeCommands):
             transformed_point = np.matmul(self.bed_plane_transformation_matrix,base_point)
             if self.next_segment:
                 transformed_point = np.matmul(self.active_plane,transformed_point)
-                transformed_point[0] += self.active_displacement[0]
-                transformed_point[1] += self.active_displacement[1]
-                transformed_point[2] += self.active_displacement[2]
+                #transformed_point[0] += self.active_displacement[0]
+                #transformed_point[1] += self.active_displacement[1]
+                #transformed_point[2] += self.active_displacement[2]
             affine = self.robot.make_affine_object(transformed_point[0] + self.gcode_home_pose_vec[0],transformed_point[1] + self.gcode_home_pose_vec[1],transformed_point[2] + self.gcode_home_pose_vec[2])
             affines.append(affine)
         for affine, velocity_rel in affines, velocity_rels:
             waypoint = self.robot.make_waypoint(affine,velocity_rel)
             waypoints.append(waypoint)
         return waypoints
-
+    """
     def make_path(self,interval,corner_blending,motion_data):
         '''
         Generate waypoints for path following with a blending distance for smoothing motion when changing taget waypoint
@@ -933,9 +945,9 @@ class GCodeExecutor(GCodeCommands):
             transformed_point = np.matmul(self.bed_plane_transformation_matrix,base_point)
             if self.next_segment is True:
                 transformed_point = np.matmul(self.active_plane,transformed_point)
-                transformed_point[0] += self.active_displacement[0]
-                transformed_point[1] += self.active_displacement[1]
-                transformed_point[2] += self.active_displacement[2]
+                #transformed_point[0] += self.active_displacement[0]
+                #transformed_point[1] += self.active_displacement[1]
+                #transformed_point[2] += self.active_displacement[2]
 
             # Pure translation for non-extrusion move, using previous rotation
             if self.read_param(point,'E') is False:
@@ -948,15 +960,18 @@ class GCodeExecutor(GCodeCommands):
                 if point == interval[0]:
                     path_points.append(start_pose)
             else:
+                """
                 [x_rot,y_rot,slope] = self.slope_angles(start_point,base_point)
+                
                 if abs(y_rot) > abs(self.y_rot) and self.use_frenet_serret is True:
                     self.y_rot = y_rot
                 if abs(x_rot) > abs(self.x_rot) and self.use_frenet_serret is True:
                     self.x_rot = x_rot
+                """
                 if point == interval[0]:
                     first_point = self.robot.make_affine_object(z_translation[0],z_translation[1],z_translation[2],b=self.y_rot,c=-self.x_rot)
                     path_points.append(first_point)
-                    self.robot.execute_reaction_move(frame=self.robot.tool_frame,motion=self.robot.make_linear_motion(first_point),data=motion_data)
+                    self.robot.execute_move(frame=self.robot.tool_frame,motion=self.robot.make_linear_motion(first_point),data=motion_data)
                     self.robot.recover_from_errors()
             affine = self.robot.make_affine_object(transformed_point[0] + self.gcode_home_pose_vec[0],transformed_point[1] + self.gcode_home_pose_vec[1],transformed_point[2] + self.gcode_home_pose_vec[2],b=self.y_rot,c=-self.x_rot)
             path_points.append(affine)
@@ -965,7 +980,7 @@ class GCodeExecutor(GCodeCommands):
             self.path_extrusion -= self.prev_E_total
 
         return path_motion, path
-
+    """
     def target_point(self,line_number):
         '''
 
@@ -991,12 +1006,13 @@ class GCodeExecutor(GCodeCommands):
             transformed_point[1] += self.active_displacement[1]
             transformed_point[2] += self.active_displacement[2]
         return transformed_point[0] + self.gcode_home_pose_vec[0], transformed_point[1] + self.gcode_home_pose_vec[1], transformed_point[2] + self.gcode_home_pose_vec[2]
-
+    """
+    
     def run_code_segments(self):
         prev_progress = 0
         self.robot.set_velocity_rel(1.0)
-        for interval in self.list_of_intervals: ##Her på jeg ta tiden  ########################################################################
-            progress = math.floor((100 * interval[0])/(self.number_of_lines - 1.0))
+        for interval in self.list_of_intervals: 
+            progress = math.floor((100 * interval[0])/(self.number_of_lines - 1.0)) #PERCENTAGE
             if progress > prev_progress:
                 print(f"Current progress is {progress}%, on line {interval[0]} of {self.number_of_lines}.")
                 prev_progress = progress
@@ -1019,24 +1035,24 @@ class GCodeExecutor(GCodeCommands):
         -----
 
         '''
-        command = self.read_command(self.interval[0])
+        self.command = self.read_command(self.interval[0])
         # Handle different M (machine) commands
-        if command[0] == 'M':
+        if self.command[0] == 'M':
             # Call method for each M-command (M79(),M42(), etc)
-            getattr(self,command,getattr(self,'default'))()
+            getattr(self,self.command,getattr(self,'default'))()
 
-        elif command[0] == 'G':
+        elif self.command[0] == 'G':
             # Find desired feedrate / working speed / max velocity
             if self.read_param(self.interval[0],'F') is not False:
                 self.F = self.read_param(self.interval[0],'F')
 
             # Call method for G-command
-            getattr(self,command,getattr(self,'default'))()
+            getattr(self,self.command,getattr(self,'default'))()
 
         else:
-            print(f"Command other than M or G... Silently passing on command {command}")
+            print(f"Command other than M or G... Silently passing on command {self.command}")
             pass
-
+    """
     def visualize_bed_mesh(self):
         '''
         Plot the bed mesh based on the bed_points from the probing sequence
@@ -1106,6 +1122,8 @@ class GCodeExecutor(GCodeCommands):
 
         # fig.write_image('bedmesh.eps',width=1920,height=1080)
 
+    """
+    """
     def visualize_gcode(self):
         '''
         Visualize motion trajectories where extrusion occures. Plot of extrusion paths generates a model
@@ -1224,7 +1242,8 @@ class GCodeExecutor(GCodeCommands):
         fig.show()
 
         self.reset_parameters()
-
+    """
+    """
     def plot_cart_path(self,t_list, s_list, v_list, a_list, j_list):
         plt.figure()
         plt.plot(t_list, s_list, label='path')
@@ -1238,7 +1257,7 @@ class GCodeExecutor(GCodeCommands):
         plt.ylabel('m, m/s, m/s2, m/s3')
 
         plt.show()
-
+    """
     def reset_parameters(self):
         '''
         Resets parameters to zero
@@ -1258,6 +1277,7 @@ class GCodeExecutor(GCodeCommands):
         self.E = 0
         self.set_prev_xyz()
 
+    """
     def __str__(self):
         '''
         Sets the Class object string representation
@@ -1272,7 +1292,8 @@ class GCodeExecutor(GCodeCommands):
 
         '''
         return "GCodeExecutor"
-
+    """
+    """
     def display(self):
         '''
         Display basic iformation about the Class object such as filename of processed file, number of lines, material use, etc.
@@ -1290,6 +1311,7 @@ class GCodeExecutor(GCodeCommands):
             print(f"\nName of file being processed: {self.filename_ + '.gcode'}")
         print(f"Number of command lines processed: {self.number_of_lines}")
         print("Total filament used: \n")
+    """
 
 
 if __name__ == '__main__':

@@ -15,7 +15,7 @@ from _movex import Path, TimeParametrization, Trajectory
 
 
 
-
+"""
 def move_robot_square(self):
     translations = [Affine(10.0, 0.0, 0.0), Affine(0.0, 10.0, 0.0), Affine(-10.0, 0.0, 0.0), Affine(0.0, -10.0, 0.0)]
     for i in range(len(translations)):
@@ -308,3 +308,5 @@ def research_experiments_height():
 
             
 
+
+"""
