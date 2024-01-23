@@ -2,12 +2,10 @@ import serial
 import math
 import struct
 import time
-from time import sleep
-
-from am_robot.AbstractTool import AbstractTool
 
 
-class ExtruderTool(AbstractTool):
+
+class ExtruderTool():
     '''
     Converts feedrate from mm/min to mm/s and passes it to extrusion controller
 
@@ -25,7 +23,6 @@ class ExtruderTool(AbstractTool):
         '''
         Initialize extruder tool
         '''
-        super().__init__(port)
 
         self.tooltype = tooltype
         self.port = port

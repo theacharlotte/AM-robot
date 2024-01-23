@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  amrobot:
+    image: amrobot
+    build:
+      context: .
+      dockerfile: ./Dockerfile

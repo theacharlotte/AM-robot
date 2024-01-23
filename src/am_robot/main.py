@@ -6,6 +6,8 @@ import math
 from am_robot.GCodeExecutor import GCodeExecutor
 from am_robot.ExtruderTool import ExtruderTool
 from am_robot.FrankaRobot import FrankaRobot
+from am_robot.MotionPlanner import MotionPlanner
+from am_robot.Transformations import Transformations
 
 import logging
 log = logging.getLogger(__name__)
@@ -48,11 +50,17 @@ def main():
 
     time_elapsed_task = time.time()
     time_elapsed_total = time.time()
+    
+    use_pose_transformation = [0,0.005,0.03598076211,60*math.pi/180,0,0]
+    use_pose_transformation = [0, 0, 0, 0, 0, 0]
 
     tool = ExtruderTool(args.tool,'FDM')
     robot = FrankaRobot(args.host)
-    executor = GCodeExecutor(args.gfile,robot,tool)
-    executor.load_gcode(args.lines)
+    transformations= Transformations(use_pose_transformation,robot)
+    motionPlanner = MotionPlanner(args.gfile,robot,transformations)
+    executor = GCodeExecutor(robot,motionPlanner,tool,transformations)
+
+    motionPlanner.load_gcode(args.lines)
 
     print("Done pre-processing gcode")
 
@@ -61,21 +69,23 @@ def main():
         executor.home_gcode(args.home_mode)
 
         # Uses force feedback to determine where n points of the print bed are located
-        use_pose_transformation = [0,0.005,0.03598076211,60*math.pi/180,0,0]
-        use_pose_transformation = [0, 0, 0, 0, 0, 0]
+
         if not args.skip_probe:
-            bed_found = executor.probe_bed(False, use_pose_transformation)
+            bed_points = executor.probe_bed(False, use_pose_transformation)
         else:
-            bed_found = executor.probe_bed(True, use_pose_transformation)
+            bed_points = executor.probe_bed(True, use_pose_transformation)
                 
-        if bed_found:
+        if bed_points:
+            transformations.set_bed_points(bed_points)
+
+            transformations.fra_probe_bed()
             time_elapsed_task = time.time()
 
             try:
                 executor.run_code_segments()
             except KeyboardInterrupt:
-                executor.tool.set_feedrate(0.0)
-                executor.tool.set_nozzletemp(0.0)
+                tool.set_feedrate(0.0)
+                tool.set_nozzletemp(0.0)
                 exit()
 
             time_elapsed_task = time.time() - time_elapsed_task
@@ -88,8 +98,8 @@ def main():
     print(f"Task done in {time_elapsed_task:.5f}s")
     print(f"Total time elapsed: {time_elapsed_total:.5f}s")
    
-    executor.tool.set_feedrate(0.0)
-    executor.tool.disconnect()
+    tool.set_feedrate(0.0)
+    tool.disconnect()
 
     
 if __name__ == '__main__':
