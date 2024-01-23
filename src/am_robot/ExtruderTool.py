@@ -24,21 +24,11 @@ class ExtruderTool(AbstractTool):
     def __init__(self,port,tooltype):
         '''
         Initialize extruder tool
-
-        Input:
-        -----
-
-        Returns:
-        -----
-
         '''
         super().__init__(port)
 
         self.tooltype = tooltype
         self.port = port
-        #self.filament_width = filament_width
-        # self.nozzle_diameter = nozzle_diameter
-        #self.T_tool = tool_transformation
 
         print(self.port)
         self.ser = serial.Serial(self.port)
@@ -47,26 +37,14 @@ class ExtruderTool(AbstractTool):
         self.micro_stepping = 16.0
         self.gear_ratio = 3.0  # From datasheet
         self.hobb_diameter_mm = 7.68  # 7.3 # From datasheet/manufacturer (effective and should be calibrated)
-        self.correcting_term = 1.0  # Change this to value after running extest.py and calculating true value
 
         self.steps_per_mm_filament = self.calculate_steps_per_mm()
 
     def disconnect(self):
         '''
         Disconnect the serial connection
-
-        Input:
-        -----
-
-        Returns:
-        -----
-
         '''
         self.ser.close()
-    """
-    def __str__(self):
-        return "ToolType = "+str(self.tooltype)
-    """
 
     def set_feedrate(self,feedrate):
         '''
@@ -76,10 +54,6 @@ class ExtruderTool(AbstractTool):
         -----
         feedrate: float
             feedrate in mm/min
-
-        Returns:
-        ----
-
         '''
         feedrate = self.convert_per_minute_to_per_second(feedrate)
         motor_frequency = self.feedrate_to_motor_frequency(feedrate)
@@ -94,62 +68,14 @@ class ExtruderTool(AbstractTool):
         -----
         temperature: float
             temperature in degree celsius
-
-        Returns:
-        ----
-
         '''
         packed = struct.pack('f',temperature)
         self.ser.write(b'H'+packed)  # + 4 bytes of number
 
-    """
-    def blink_led(self):
-        '''
-        Blink the arduino led once
-
-        Input:
-        -----
-
-        Returns:
-        -----
-
-        '''
-        self.ser.write(b'B')
-    """
-    """
-    def set_fanspeed(self,speed):
-        '''
-        Sets the fanspeed
-
-        Input:
-        -----
-
-        Returns:
-        -----
-
-        '''
-        print(" Fan speed not implemented")
-    """
-    """
-    def disable_fan(self):
-        '''
-        Turns off fans
-
-        Input:
-        -----
-
-        Returns:
-        -----
-
-        '''
-        print("Disable fan not implemented")
-    """
+   
     def read_temperature(self):
         '''
         Read and return temperature of hotend in Celsius
-
-        Input:
-        -----
 
         Returns:
         -----
@@ -178,9 +104,6 @@ class ExtruderTool(AbstractTool):
     def read_extrusion_speed(self):  ## Unused now, but might be useful in feedback loop
         '''
         Read and return extrusion rate in mm/s
-
-        Input:
-        -----
 
         Returns:
         -----
@@ -256,9 +179,6 @@ class ExtruderTool(AbstractTool):
         '''
         Calculates the stepper motor steps per mm filament
 
-        Input:
-        -----
-
         Returns:
         -----
         steps_per_mm: float
@@ -273,21 +193,6 @@ class ExtruderTool(AbstractTool):
         '''
         return value_per_minute/60.0
 
-    """
-    def convert_per_second_to_per_minute(self,value_per_second):
-        '''
-        Multiplies by 60
-        '''
-        return value_per_second*60.0
-    """
-    """
-
-    def calculate_difference(self,first_value,second_value):
-        '''
-        Returns the difference of two values
-        '''
-        return second_value-first_value
-    """
 
     def calculate_delta_t(self,first_value,second_value,feedrate):
         '''
@@ -301,14 +206,3 @@ class ExtruderTool(AbstractTool):
         '''
         return self.convert_per_minute_to_per_second(feedrate)/robot_vel_constraint
     
-    """
-    def thread_varying_feedrate(self, extruder_vel):
-        sleep(0.5)
-        start_time = time.time()
-        while(time.time() - start_time) < 12.9: #Takes 12.9 sec to do 10cm relative motion with dynamic relative velocity 0.01
-            self.set_feedrate(0.75*extruder_vel)  # The coefficient might have to change
-            sleep(0.5)
-            self.set_feedrate(extruder_vel) 
-            sleep(0.5)
-        self.set_feedrate(0.0)
-    """

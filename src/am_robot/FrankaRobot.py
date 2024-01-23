@@ -7,13 +7,6 @@ from am_robot.AbstractRobot import AbstractRobot
 if sys.platform == 'linux':
     from frankx import Affine, LinearMotion, Robot, RobotMode, RobotState, WaypointMotion, JointMotion, Waypoint, Reaction, LinearRelativeMotion, Measure, PathMotion, MotionData
     from _movex import Path, TimeParametrization, Trajectory
-'''elif sys.platform == 'win32':
-    try:
-        from frankx import Affine, LinearMotion, Robot, RobotMode, RobotState, WaypointMotion, JointMotion, Waypoint, Reaction, LinearRelativeMotion, Measure, PathMotion, MotionData
-    except Exception as e:
-        print(e)
-    finally:
-        print('Running on OS: ' + sys.platform)'''
 
 import logging
 log = logging.getLogger(__name__)
@@ -27,12 +20,6 @@ class FrankaRobot(AbstractRobot):
     -----------
     host: string
         ip string for cennection to robot. (Default: 10.0.0.2)
-    skip_connection: bool
-        flag to enable skipping connection if desired. (Default: False)
-
-    Methods:
-    -----------
-    ...
 
     '''
     def __init__(self, host):
@@ -43,8 +30,6 @@ class FrankaRobot(AbstractRobot):
         -----
         host: string
             ip string for cennection to robot. (Default: 10.0.0.2)
-        skip_connection: bool
-            flag to enable skipping connection if desired. (Default: False)
 
         Returns:
         -----
@@ -55,16 +40,6 @@ class FrankaRobot(AbstractRobot):
 
         self.host = host
 
-
-        # To skip connection (True) when not at robot for testing other functions without connection timeout
-        """if skip_connection is True:
-            print("Skipped trying to connect to robot with IP: " + self.host)
-            self.robot = {}
-            self.current_pose = []
-            self.is_connected = False
-        
-        else:
-        """
 
         try:
             print("Attempting to connect to robot...")
@@ -90,92 +65,12 @@ class FrankaRobot(AbstractRobot):
         self.height_down = -0.360
         self.sweep_angle = 2 * math.pi
         self.base_area = 0.1  # front area radius
-    """
-    def set_robot_mode(self, mode):
-        '''
-        Change mode of robot, i.e. Guiding, idle, etc
-
-        Input:
-        -----
-        mode: string
-            string for the type of mode the robot should be in
-
-        Returns:
-        -----
-
-        '''
-        if mode == 'Guiding':
-            RobotMode.Guiding
-        elif mode == 'idle':
-            RobotMode.Idle
-    """
-    """
-    def read_Robot_state(self, state):
-        '''
-        Return the desired state information from RobotState object
-
-        Input:
-        -----10.0,10.0,10.0,10.0,10.0,10.
-        Returns:
-        -----
-        RobotState.state: varies
-            Value of desired robot state
-
-        '''
-        return RobotState.__dict__[state]
-    """
-    """
-    def lin_move_to_point(self, X, Y, Z):
-        '''
-        Move linearly to a target X,Y,Z point
-
-        Input:
-        -----
-
-        Returns:
-        -----
-
-        '''
-        log.debug(f"Linear move to point X: {X}, Y: {Y}, Z: {Z}")
-        move = LinearMotion(Affine(X, Y, Z))
-        self.robot.move(self.tool_frame, move)
-        log.debug(f"Current robot pose: {self.read_current_pose()}")
-    """
-    '''
-    def follow_waypoints(self, waypoints):
-        ''''''
-        Perform a waypoint move to follow a list of waypoints in a sepatate thread
-
-        Input:
-        -----
-        waypoints: list of Waypoints
-            A list of Waypoint object target points
-
-        Returns:
-        -----
-        motion: WaypointMotion object
-            The movement object used by Frankx
-        thread: Thread
-            The thread which the movement is performed in. To be joined later
-
-        '''''''
-        motion = WaypointMotion(waypoints, return_when_finished=False)
-        thread = self.robot.move_async(motion)
-        self.robot.move()
-        return motion, thread
-    '''
+   
 
     def robot_init_move(self):
         '''
         The initial move the robot performs before manual positioning of G-code home point. To orient joints such that they are positioned in a desired orientation.
         Initial postition values are also set, such as tool_frame vector and pose used for reference frame of movements for the end-effector.
-
-        Input:
-        -----
-
-        Returns:
-        -----
-
         '''
         self.set_default_behavior()
 
@@ -211,10 +106,7 @@ class FrankaRobot(AbstractRobot):
     def read_current_pose(self):
         '''
         Return the current pose of the robot taking the self.tool_frame into account
-
-        Input:
-        -----
-
+        
         Returns:
         -----
         pose: Affine object
@@ -253,13 +145,7 @@ class FrankaRobot(AbstractRobot):
                 self.robot.move(motion, data)
             else:
                 self.robot.move(frame, motion, data)
-    '''
-    def execute_reaction_move(self, frame=None, motion=None, data=None):
-        if frame is None:
-            self.robot.move(motion, data)
-        else:
-            self.robot.move(frame, motion, data)
-    '''
+  
     def execute_threaded_move(self, frame=Affine(0.0, 0.0, 0.0, 0.0, 0.0, 0.0), motion=None, data=None):
         if data is None:
             thread = self.robot.move_async(frame, motion)
@@ -273,48 +159,14 @@ class FrankaRobot(AbstractRobot):
 
     def make_linear_relative_motion(self, affine):
         return LinearRelativeMotion(affine)
-    """
-    def make_Z_reaction_data(self, force, reaction=None):
-        return MotionData().with_reaction(Reaction(Measure.ForceZ < force, reaction))
-    """
-    """
-    def make_norm_reaction_data(self, force, reaction=None):
-        return MotionData().with_reaction(Reaction(Measure.ForceXYZNorm > force, reaction))
-    """
+
     def make_affine_object(self, x, y, z, a=0, b=0, c=0):
         return Affine(x, y, z, a, b, c)
 
     def set_dynamic_motion_data(self, dynamic_rel):
         return MotionData(dynamic_rel)
 
-    '''
-    def make_waypoint(self, affine,velocity_rel=1.0):
-        waypoint = Waypoint(affine)
-        waypoint["velocity_rel"] = velocity_rel
-        return waypoint
-    '''
-
     def make_path_motion(self, path_points, blending_distance):
         path_motion = PathMotion(path_points, blend_max_distance=blending_distance)
         path = Path(path_points, blend_max_distance=blending_distance)
         return path_motion, path
-
-    """
-    
-    def parametrize_path(self,path,timestep,vel_rels,accel_rels,jerk_rels):
-        tp = TimeParametrization(delta_time=timestep)
-        trajectory = tp.parametrize(path, vel_rels, accel_rels, jerk_rels)
-        t_list, s_list, v_list, a_list, j_list = [], [], [], [], []
-        for state in trajectory.states:
-            t_list.append(state.t)
-            s_list.append(state.s)
-            v_list.append(state.ds)
-            a_list.append(state.dds)
-            j_list.append(state.ddds)
-            log.debug(f"Trajectory Time List: {t_list}")
-            log.debug(f"Trajectory Position List: {s_list}")
-            log.debug(f"Trajectory Velocity List: {v_list}")
-            log.debug(f"Trajectory Acceleration List: {a_list}")
-            log.debug(f"Trajectory Jerk List: {j_list}")
-        return np.array(t_list), np.array(s_list), np.array(v_list), np.array(a_list), np.array(j_list)
-    """
