@@ -2,7 +2,6 @@ import sys
 import math
 import numpy as np
 
-from am_robot.AbstractRobot import AbstractRobot
 
 if sys.platform == 'linux':
     from frankx import Affine, LinearMotion, Robot, RobotMode, RobotState, WaypointMotion, JointMotion, Waypoint, Reaction, LinearRelativeMotion, Measure, PathMotion, MotionData
@@ -12,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class FrankaRobot(AbstractRobot):
+class FrankaRobot():
     '''
     Class object attributes and methods for a Franka Emika Panda robot.
 
@@ -36,7 +35,6 @@ class FrankaRobot(AbstractRobot):
         Initialized Class object
 
         '''
-        super().__init__(host)
 
         self.host = host
 
